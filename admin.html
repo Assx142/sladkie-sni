@@ -64,8 +64,6 @@ function render(){
   const tbody = document.getElementById('bookingsBody');
   const emptyMsg = document.getElementById('emptyMsg');
 
-  console.log('Загружено заявок:', bookings.length);
-
   if(!bookings.length){
     emptyMsg.classList.remove('d-none');
     tbody.innerHTML = '';
