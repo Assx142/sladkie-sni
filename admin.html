@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Панель администратора</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="css/site.css">
 <style>
 body{background:#fafafa;font-family:Arial,sans-serif}
-.site-header,footer,.panel{background:#fff;border-radius:12px;box-shadow:0 2px 14px rgba(23,43,77,.07)}
+.site-header,.panel,.debug-box{background:#fff;border-radius:12px;box-shadow:0 2px 14px rgba(23,43,77,.07)}
 .site-header{margin:18px 0;padding:14px 22px}
 .brand{font-size:1.45rem;font-weight:700;color:#212529;text-decoration:none}
-footer{margin:30px 0 16px;padding:20px}
-.muted{color:#6c757d}
+.panel{margin:24px 0;padding:24px}
+.debug-box{margin:24px 0;padding:16px;font-size:.85rem;color:#666}
+.debug-box pre{background:#f5f5f5;padding:10px;border-radius:6px;overflow:auto;max-height:200px}
 .status{display:inline-block;padding:4px 9px;border-radius:20px;font-size:.85rem}
 .status-pending{background:#fff3cd;color:#664d03}
 .status-approved{background:#d1e7dd;color:#0f5132}
 .status-rejected{background:#f8d7da;color:#842029}
+footer{margin:30px 0 16px;padding:20px;background:#fff;border-radius:12px}
+.muted{color:#6c757d}
 </style>
 </head>
 <body class="container">
@@ -25,25 +27,28 @@ footer{margin:30px 0 16px;padding:20px}
   <a class="brand" href="index.html">Сладкие сны</a>
   <div>
     <a href="index.html" class="btn btn-outline-secondary btn-sm">На сайт</a>
-    <a href="logout.html" class="btn btn-outline-danger btn-sm">Выйти</a>
+    <a href="booking.html?room=1" class="btn btn-outline-primary btn-sm">Создать тестовую заявку</a>
   </div>
 </header>
 
 <main>
   <h1 class="h2 my-4">Заявки на бронирование</h1>
 
-  <div id="authWarn" class="alert alert-warning d-none">
-    Доступ запрещён. <a href="login.html">Войти</a>.
-  </div>
-
-  <div id="content" class="panel p-3">
+  <div class="panel">
     <div class="table-responsive">
       <table class="table table-hover">
         <thead><tr><th>Гость</th><th>Контакты</th><th>Номер</th><th>Период</th><th>Статус</th><th>Действия</th></tr></thead>
         <tbody id="bookingsBody"></tbody>
       </table>
     </div>
-    <p id="emptyMsg" class="muted mb-0 d-none">Заявок пока нет.</p>
+    <p id="emptyMsg" class="muted mb-0 d-none">Заявок пока нет. <a href="booking.html?room=1">Создать тестовую</a></p>
+  </div>
+
+  <div class="debug-box">
+    <strong>🔍 Отладка:</strong> заявок в хранилище: <span id="debugCount">0</span>
+    <pre id="debugData">[]</pre>
+    <button class="btn btn-sm btn-outline-danger" onclick="if(confirm('Удалить все заявки?')){localStorage.removeItem('hotel_bookings');location.reload();}">Очистить все заявки</button>
+    <button class="btn btn-sm btn-outline-primary" onclick="addDemo()">Добавить демо-заявку</button>
   </div>
 </main>
 
@@ -51,42 +56,45 @@ footer{margin:30px 0 16px;padding:20px}
 const STATUS = {pending:"На рассмотрении", approved:"Одобрена", rejected:"Отклонена"};
 
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function fmtDate(s){const [y,m,d]=s.split('-');return `${d}.${m}.${y}`;}
+function fmtDate(s){if(!s)return '';const [y,m,d]=s.split('-');return `${d}.${m}.${y}`;}
+
+function updateDebug(){
+  const data = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
+  document.getElementById('debugCount').textContent = data.length;
+  document.getElementById('debugData').textContent = JSON.stringify(data, null, 2);
+}
 
 function render(){
-  if(!sessionStorage.getItem('hotel_admin')){
-    document.getElementById('authWarn').classList.remove('d-none');
-    document.getElementById('content').classList.add('d-none');
-    return;
-  }
-
   const bookings = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
   const tbody = document.getElementById('bookingsBody');
   const emptyMsg = document.getElementById('emptyMsg');
 
+  updateDebug();
+
   if(!bookings.length){
     emptyMsg.classList.remove('d-none');
     tbody.innerHTML = '';
-  } else {
-    emptyMsg.classList.add('d-none');
-    tbody.innerHTML = bookings.map(b=>`
-      <tr>
-        <td>${esc(b.last_name+' '+b.first_name)}</td>
-        <td>${esc(b.phone)}<br>${esc(b.email)}</td>
-        <td>${esc(b.room)}<br><small>${esc(b.category)}</small></td>
-        <td>${fmtDate(b.check_in)}–${fmtDate(b.check_out)}</td>
-        <td><span class="status status-${b.status}">${STATUS[b.status]}</span></td>
-        <td>
-          <div class="d-flex flex-wrap gap-1">
-            ${b.status==='pending'
-              ? `<button class="btn btn-success btn-sm" onclick="updateStatus(${b.id},'approved')">Одобрить</button>
-                 <button class="btn btn-warning btn-sm" onclick="updateStatus(${b.id},'rejected')">Отклонить</button>`
-              : ''}
-            <button class="btn btn-danger btn-sm" onclick="deleteBooking(${b.id})">Удалить</button>
-          </div>
-        </td>
-      </tr>`).join('');
+    return;
   }
+
+  emptyMsg.classList.add('d-none');
+  tbody.innerHTML = bookings.map(b=>`
+    <tr>
+      <td>${esc(b.last_name+' '+b.first_name)}</td>
+      <td>${esc(b.phone)}<br><small>${esc(b.email)}</small></td>
+      <td>${esc(b.room)}<br><small>${esc(b.category)}</small></td>
+      <td>${fmtDate(b.check_in)}–${fmtDate(b.check_out)}</td>
+      <td><span class="status status-${b.status}">${STATUS[b.status]||b.status}</span></td>
+      <td>
+        <div class="d-flex flex-wrap gap-1">
+          ${b.status==='pending'
+            ? `<button class="btn btn-success btn-sm" onclick="updateStatus(${b.id},'approved')">Одобрить</button>
+               <button class="btn btn-warning btn-sm" onclick="updateStatus(${b.id},'rejected')">Отклонить</button>`
+            : ''}
+          <button class="btn btn-danger btn-sm" onclick="deleteBooking(${b.id})">Удалить</button>
+        </div>
+      </td>
+    </tr>`).join('');
 }
 
 function updateStatus(id, status){
@@ -102,8 +110,27 @@ function updateStatus(id, status){
 function deleteBooking(id){
   if(!confirm('Удалить заявку?')) return;
   const bookings = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
-  const filtered = bookings.filter(b=>b.id!==id);
-  localStorage.setItem('hotel_bookings', JSON.stringify(filtered));
+  localStorage.setItem('hotel_bookings', JSON.stringify(bookings.filter(b=>b.id!==id)));
+  render();
+}
+
+function addDemo(){
+  const bookings = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
+  bookings.push({
+    id: Date.now(),
+    room_id: 1,
+    room: "Стандарт 101",
+    category: "Стандарт",
+    first_name: "Иван",
+    last_name: "Тестов",
+    phone: "+7(999)123-45-67",
+    email: "test@mail.ru",
+    check_in: "2026-11-20",
+    check_out: "2026-11-23",
+    status: "pending",
+    created_at: new Date().toISOString()
+  });
+  localStorage.setItem('hotel_bookings', JSON.stringify(bookings));
   render();
 }
 
