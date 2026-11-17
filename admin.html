@@ -4,9 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Панель администратора</title>
-<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="css/site.css">
-<link rel="stylesheet" href="css/index.css">
+<style>
+body{background:#fafafa;font-family:Arial,sans-serif}
+.site-header,footer,.panel{background:#fff;border-radius:12px;box-shadow:0 2px 14px rgba(23,43,77,.07)}
+.site-header{margin:18px 0;padding:14px 22px}
+.brand{font-size:1.45rem;font-weight:700;color:#212529;text-decoration:none}
+footer{margin:30px 0 16px;padding:20px}
+.muted{color:#6c757d}
+.status{display:inline-block;padding:4px 9px;border-radius:20px;font-size:.85rem}
+.status-pending{background:#fff3cd;color:#664d03}
+.status-approved{background:#d1e7dd;color:#0f5132}
+.status-rejected{background:#f8d7da;color:#842029}
+</style>
 </head>
 <body class="container">
 
@@ -20,9 +31,11 @@
 
 <main>
   <h1 class="h2 my-4">Заявки на бронирование</h1>
+
   <div id="authWarn" class="alert alert-warning d-none">
     Доступ запрещён. <a href="login.html">Войти</a>.
   </div>
+
   <div id="content" class="panel p-3">
     <div class="table-responsive">
       <table class="table table-hover">
@@ -34,17 +47,9 @@
   </div>
 </main>
 
-<script src="js/bootstrap.bundle.min.js"></script>
 <script>
-const DEMO = [
-  {id:1, last:"Иванов", first:"Иван", phone:"+7(999)123-45-67", email:"ivanov@mail.ru",
-   room:"Стандарт 101", category:"Стандарт", inD:"2026-11-20", outD:"2026-11-23", status:"pending"},
-  {id:2, last:"Петрова", first:"Анна", phone:"+7(916)555-44-33", email:"petrova@yandex.ru",
-   room:"Люкс 301", category:"Люкс", inD:"2026-12-01", outD:"2026-12-05", status:"approved"},
-  {id:3, last:"Сидоров", first:"Пётр", phone:"+7(903)111-22-33", email:"sidorov@gmail.com",
-   room:"Семейный 402", category:"Семейный", inD:"2026-11-18", outD:"2026-11-22", status:"rejected"}
-];
 const STATUS = {pending:"На рассмотрении", approved:"Одобрена", rejected:"Отклонена"};
+
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtDate(s){const [y,m,d]=s.split('-');return `${d}.${m}.${y}`;}
 
@@ -52,24 +57,49 @@ if(!sessionStorage.getItem('admin')){
   document.getElementById('authWarn').classList.remove('d-none');
   document.getElementById('content').classList.add('d-none');
 } else {
+  const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
   const tbody = document.getElementById('bookingsBody');
-  if(!DEMO.length){ document.getElementById('emptyMsg').classList.remove('d-none'); }
-  tbody.innerHTML = DEMO.map(b=>`
-    <tr>
-      <td>${esc(b.last+' '+b.first)}</td>
-      <td>${esc(b.phone)}<br>${esc(b.email)}</td>
-      <td>${esc(b.room)}<br><small>${esc(b.category)}</small></td>
-      <td>${fmtDate(b.inD)}–${fmtDate(b.outD)}</td>
-      <td><span class="status status-${b.status}">${STATUS[b.status]}</span></td>
-      <td>
-        <div class="d-flex flex-wrap gap-1">
-          ${b.status==='pending'
-            ? `<button class="btn btn-success btn-sm" onclick="alert('На GitHub Pages одобрение недоступно — нужен PHP-хостинг.')">Одобрить</button>
-               <button class="btn btn-warning btn-sm" onclick="alert('На GitHub Pages отклонение недоступно — нужен PHP-хостинг.')">Отклонить</button>`:''}
-          <button class="btn btn-danger btn-sm" onclick="if(confirm('Удалить заявку?'))alert('На GitHub Pages удаление недоступно.')">Удалить</button>
-        </div>
-      </td>
-    </tr>`).join('');
+  const emptyMsg = document.getElementById('emptyMsg');
+
+  if(!bookings.length){
+    emptyMsg.classList.remove('d-none');
+  } else {
+    tbody.innerHTML = bookings.map(b=>`
+      <tr>
+        <td>${esc(b.last_name+' '+b.first_name)}</td>
+        <td>${esc(b.phone)}<br>${esc(b.email)}</td>
+        <td>${esc(b.room)}<br><small>${esc(b.category)}</small></td>
+        <td>${fmtDate(b.check_in)}–${fmtDate(b.check_out)}</td>
+        <td><span class="status status-${b.status}">${STATUS[b.status]}</span></td>
+        <td>
+          <div class="d-flex flex-wrap gap-1">
+            ${b.status==='pending'
+              ? `<button class="btn btn-success btn-sm" onclick="updateStatus(${b.id},'approved')">Одобрить</button>
+                 <button class="btn btn-warning btn-sm" onclick="updateStatus(${b.id},'rejected')">Отклонить</button>`
+              : ''}
+            <button class="btn btn-danger btn-sm" onclick="deleteBooking(${b.id})">Удалить</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+}
+
+function updateStatus(id, status){
+  const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+  const idx = bookings.findIndex(b=>b.id===id);
+  if(idx!==-1){
+    bookings[idx].status = status;
+    localStorage.setItem('bookings', JSON.stringify(bookings));
+    location.reload();
+  }
+}
+
+function deleteBooking(id){
+  if(!confirm('Удалить заявку?')) return;
+  const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+  const filtered = bookings.filter(b=>b.id!==id);
+  localStorage.setItem('bookings', JSON.stringify(filtered));
+  location.reload();
 }
 </script>
 </body>
