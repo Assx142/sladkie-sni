@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Панель администратора</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body class="container">
+<header class="site-header d-flex justify-content-between align-items-center">
+  <a class="brand" href="index.html">Сладкие сны</a>
+  <div>
+    <a href="index.html" class="btn btn-outline-secondary btn-sm">На сайт</a>
+    <a href="logout.html" class="btn btn-outline-danger btn-sm">Выйти</a>
+  </div>
+</header>
+<main>
+  <h1 class="h2 my-4">Заявки на бронирование</h1>
+  <div id="authWarn" class="alert alert-warning d-none">
+    Доступ запрещён. <a href="login.html">Войти</a>.
+  </div>
+  <div id="content" class="panel p-3">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead><tr><th>Гость</th><th>Контакты</th><th>Номер</th><th>Период</th><th>Статус</th><th>Действия</th></tr></thead>
+        <tbody id="bookingsBody"></tbody>
+      </table>
+    </div>
+    <p id="emptyMsg" class="muted mb-0 d-none">Заявок пока нет.</p>
+  </div>
+</main>
+<script>
+const DEMO = [
+  {id:1, last:"Иванов", first:"Иван", phone:"+7(999)123-45-67", email:"ivanov@mail.ru",
+   room:"Стандарт 101", category:"Стандарт", inD:"2026-11-20", outD:"2026-11-23", status:"pending"},
+  {id:2, last:"Петрова", first:"Анна", phone:"+7(916)555-44-33", email:"petrova@yandex.ru",
+   room:"Люкс 301", category:"Люкс", inD:"2026-12-01", outD:"2026-12-05", status:"approved"},
+  {id:3, last:"Сидоров", first:"Пётр", phone:"+7(903)111-22-33", email:"sidorov@gmail.com",
+   room:"Семейный 402", category:"Семейный", inD:"2026-11-18", outD:"2026-11-22", status:"rejected"}
+];
+const STATUS = {pending:"На рассмотрении", approved:"Одобрена", rejected:"Отклонена"};
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtDate(s){const [y,m,d]=s.split('-');return `${d}.${m}.${y}`;}
+
+if(!sessionStorage.getItem('admin')){
+  document.getElementById('authWarn').classList.remove('d-none');
+  document.getElementById('content').classList.add('d-none');
+} else {
+  const tbody = document.getElementById('bookingsBody');
+  if(!DEMO.length){ document.getElementById('emptyMsg').classList.remove('d-none'); }
+  tbody.innerHTML = DEMO.map(b=>`
+    <tr>
+      <td>${esc(b.last+' '+b.first)}</td>
+      <td>${esc(b.phone)}<br>${esc(b.email)}</td>
+      <td>${esc(b.room)}<br><small>${esc(b.category)}</small></td>
+      <td>${fmtDate(b.inD)}–${fmtDate(b.outD)}</td>
+      <td><span class="status status-${b.status}">${STATUS[b.status]}</span></td>
+      <td>
+        <div class="d-flex flex-wrap gap-1">
+          ${b.status==='pending'
+            ? `<button class="btn btn-success btn-sm">Одобрить</button>
+               <button class="btn btn-warning btn-sm">Отклонить</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="if(confirm('Удалить заявку?'))alert('На GitHub Pages удаление недоступно.')">Удалить</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+</script>
+</body>
+</html>
