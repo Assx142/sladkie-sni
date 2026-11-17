@@ -53,17 +53,24 @@ const STATUS = {pending:"На рассмотрении", approved:"Одобре�
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtDate(s){const [y,m,d]=s.split('-');return `${d}.${m}.${y}`;}
 
-if(!sessionStorage.getItem('admin')){
-  document.getElementById('authWarn').classList.remove('d-none');
-  document.getElementById('content').classList.add('d-none');
-} else {
-  const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+function render(){
+  if(!sessionStorage.getItem('hotel_admin')){
+    document.getElementById('authWarn').classList.remove('d-none');
+    document.getElementById('content').classList.add('d-none');
+    return;
+  }
+
+  const bookings = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
   const tbody = document.getElementById('bookingsBody');
   const emptyMsg = document.getElementById('emptyMsg');
 
+  console.log('Загружено заявок:', bookings.length);
+
   if(!bookings.length){
     emptyMsg.classList.remove('d-none');
+    tbody.innerHTML = '';
   } else {
+    emptyMsg.classList.add('d-none');
     tbody.innerHTML = bookings.map(b=>`
       <tr>
         <td>${esc(b.last_name+' '+b.first_name)}</td>
@@ -85,22 +92,24 @@ if(!sessionStorage.getItem('admin')){
 }
 
 function updateStatus(id, status){
-  const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+  const bookings = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
   const idx = bookings.findIndex(b=>b.id===id);
   if(idx!==-1){
     bookings[idx].status = status;
-    localStorage.setItem('bookings', JSON.stringify(bookings));
-    location.reload();
+    localStorage.setItem('hotel_bookings', JSON.stringify(bookings));
+    render();
   }
 }
 
 function deleteBooking(id){
   if(!confirm('Удалить заявку?')) return;
-  const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+  const bookings = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
   const filtered = bookings.filter(b=>b.id!==id);
-  localStorage.setItem('bookings', JSON.stringify(filtered));
-  location.reload();
+  localStorage.setItem('hotel_bookings', JSON.stringify(filtered));
+  render();
 }
+
+render();
 </script>
 </body>
 </html>
