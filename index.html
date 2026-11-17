@@ -61,35 +61,16 @@ footer{margin:30px 0 16px;padding:20px}
 </footer>
 
 <script>
-// Пути к картинкам — файлы лежат в корне репозитория
 const ROOMS = [
-  {id:1,name:"Стандарт 101",category:"Стандарт",categoryId:1,price:3000,
-   image:"standart.jpg",
-   desc:"Односпальная кровать; Wi-Fi; ТВ; кондиционер; душ"},
-  {id:2,name:"Стандарт 102",category:"Стандарт",categoryId:1,price:3000,
-   image:"Станд_Кинг_1-1620x1080.jpg",
-   desc:"Двуспальная кровать; Wi-Fi; ТВ; кондиционер; душ"},
-  {id:3,name:"Стандарт 103",category:"Стандарт",categoryId:1,price:3200,
-   image:"10.jpg",
-   desc:"Две раздельные кровати; Wi-Fi; ТВ; кондиционер; душ"},
-  {id:4,name:"Комфорт 201",category:"Комфорт",categoryId:2,price:4500,
-   image:"ren_037_ren03663_hd.jpg",
-   desc:"King-size кровать; мини-бар; сейф; халат; ванна"},
-  {id:5,name:"Комфорт 202",category:"Комфорт",categoryId:2,price:4500,
-   image:"Vert-16.jpg",
-   desc:"King-size кровать; рабочий стол; мини-бар; балкон"},
-  {id:6,name:"Люкс 301",category:"Люкс",categoryId:3,price:7000,
-   image:"Люкс 1.jpg",
-   desc:"Гостиная + спальня; джакузи; панорамный вид; халат; тапочки"},
-  {id:7,name:"Люкс 302",category:"Люкс",categoryId:3,price:7500,
-   image:"garden-ring-hotel-moscow-suit-room-01.jpg",
-   desc:"Двухкомнатный; камин; сауна; мини-кухня; вид на парк"},
-  {id:8,name:"Семейный 401",category:"Семейный",categoryId:4,price:5500,
-   image:"487d7588b2bc7b4066334ea328e7a7bb.jpg",
-   desc:"Двуспальная + детская кровать; кухня; детская ванна; Wi-Fi"},
-  {id:9,name:"Семейный 402",category:"Семейный",categoryId:4,price:5800,
-   image:"ee3d8d71bcbd5f9531616f975035f0e9.jpg",
-   desc:"Две спальни; гостиная; кухня; балкон; игровая зона"}
+  {id:1,name:"Стандарт 101",category:"Стандарт",categoryId:1,price:3000,image:"img/room1.jpg",desc:"Односпальная кровать; Wi-Fi; ТВ; кондиционер; душ"},
+  {id:2,name:"Стандарт 102",category:"Стандарт",categoryId:1,price:3000,image:"img/room2.jpg",desc:"Двуспальная кровать; Wi-Fi; ТВ; кондиционер; душ"},
+  {id:3,name:"Стандарт 103",category:"Стандарт",categoryId:1,price:3200,image:"img/room3.jpg",desc:"Две раздельные кровати; Wi-Fi; ТВ; кондиционер; душ"},
+  {id:4,name:"Комфорт 201",category:"Комфорт",categoryId:2,price:4500,image:"img/room4.jpg",desc:"King-size кровать; мини-бар; сейф; халат; ванна"},
+  {id:5,name:"Комфорт 202",category:"Комфорт",categoryId:2,price:4500,image:"img/room5.jpg",desc:"King-size кровать; рабочий стол; мини-бар; балкон"},
+  {id:6,name:"Люкс 301",category:"Люкс",categoryId:3,price:7000,image:"img/room6.jpg",desc:"Гостиная + спальня; джакузи; панорамный вид; халат; тапочки"},
+  {id:7,name:"Люкс 302",category:"Люкс",categoryId:3,price:7500,image:"img/room7.jpg",desc:"Двухкомнатный; камин; сауна; мини-кухня; вид на парк"},
+  {id:8,name:"Семейный 401",category:"Семейный",categoryId:4,price:5500,image:"img/room8.jpg",desc:"Двуспальная + детская кровать; кухня; детская ванна; Wi-Fi"},
+  {id:9,name:"Семейный 402",category:"Семейный",categoryId:4,price:5800,image:"img/room9.jpg",desc:"Две спальни; гостиная; кухня; балкон; игровая зона"}
 ];
 
 function fmt(n){return n.toLocaleString('ru-RU')+' ₽';}
