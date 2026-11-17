@@ -4,9 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Бронирование — Сладкие сны</title>
-<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="css/site.css">
-<link rel="stylesheet" href="css/index.css">
+<style>
+body{background:#fafafa;font-family:Arial,sans-serif}
+.site-header,footer,.form-panel{background:#fff;border-radius:12px;box-shadow:0 2px 14px rgba(23,43,77,.07)}
+.site-header{margin:18px 0;padding:14px 22px}
+.brand{font-size:1.45rem;font-weight:700;color:#212529;text-decoration:none}
+.form-panel{margin:24px 0;padding:24px}
+footer{margin:30px 0 16px;padding:20px}
+.muted{color:#6c757d}
+</style>
 </head>
 <body class="container">
 
@@ -20,7 +28,7 @@
   <p id="roomInfo"></p>
 
   <div id="successBlock" class="alert alert-success d-none">
-    Заявка успешно отправлена! После рассмотрения администратором вы сможете узнать статус бронирования по обратной связи.
+    ✅ Заявка успешно отправлена! После рассмотрения администратором вы сможете узнать статус бронирования по обратной связи.
     <br><a class="btn btn-primary mt-2" href="index.html">Вернуться в каталог</a>
   </div>
 
@@ -62,7 +70,6 @@
 
 <footer>Москва, ул. Ивовая, 48 · Пн–Пт, 8:00–17:00 · 8 (800) 555-35-35</footer>
 
-<script src="js/bootstrap.bundle.min.js"></script>
 <script>
 const ROOMS = {
   1:{name:"Стандарт 101",category:"Стандарт",price:3000},
@@ -135,6 +142,25 @@ document.getElementById('bookingForm').addEventListener('submit', e=>{
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showErr('Введите корректный адрес электронной почты.');
   if(!inD || inD < today()) return showErr('Дата заезда не может быть раньше сегодняшней.');
   if(!outD || outD <= inD) return showErr('Дата выезда должна быть позже даты заезда.');
+
+  // Сохраняем заявку в localStorage
+  const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+  const newBooking = {
+    id: Date.now(),
+    room_id: roomId,
+    room: room.name,
+    category: room.category,
+    first_name: first,
+    last_name: last,
+    phone: phone,
+    email: email,
+    check_in: inD,
+    check_out: outD,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  };
+  bookings.push(newBooking);
+  localStorage.setItem('bookings', JSON.stringify(bookings));
 
   e.target.classList.add('d-none');
   success.classList.remove('d-none');
