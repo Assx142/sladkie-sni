@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Бронирование — Сладкие сны</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="css/site.css">
 <style>
 body{background:#fafafa;font-family:Arial,sans-serif}
-.site-header,footer,.form-panel{background:#fff;border-radius:12px;box-shadow:0 2px 14px rgba(23,43,77,.07)}
+.site-header,.form-panel,.debug-box{background:#fff;border-radius:12px;box-shadow:0 2px 14px rgba(23,43,77,.07)}
 .site-header{margin:18px 0;padding:14px 22px}
 .brand{font-size:1.45rem;font-weight:700;color:#212529;text-decoration:none}
 .form-panel{margin:24px 0;padding:24px}
-footer{margin:30px 0 16px;padding:20px}
+.debug-box{margin:24px 0;padding:16px;font-size:.85rem;color:#666}
+.debug-box pre{background:#f5f5f5;padding:10px;border-radius:6px;overflow:auto;max-height:200px}
+footer{margin:30px 0 16px;padding:20px;background:#fff;border-radius:12px}
 .muted{color:#6c757d}
 </style>
 </head>
@@ -23,18 +24,20 @@ footer{margin:30px 0 16px;padding:20px}
   <a href="index.html" class="btn btn-outline-secondary btn-sm">← Каталог</a>
 </header>
 
-<main class="form-panel my-4">
+<main class="form-panel">
   <h1 class="h2">Бронирование номера</h1>
   <p id="roomInfo"></p>
 
   <div id="successBlock" class="alert alert-success d-none">
-    ✅ Заявка успешно отправлена! После рассмотрения администратором вы сможете узнать статус бронирования по обратной связи.
-    <br><a class="btn btn-primary mt-2" href="index.html">Вернуться в каталог</a>
+    ✅ <strong>Заявка сохранена!</strong> Теперь откройте <a href="admin.html">панель администратора</a> — она там появится.
+    <br><br>
+    <a class="btn btn-primary" href="index.html">Вернуться в каталог</a>
+    <a class="btn btn-outline-primary" href="admin.html">Открыть админку →</a>
   </div>
 
   <div id="errorBlock" class="alert alert-danger d-none"></div>
 
-  <form id="bookingForm" class="row g-3" novalidate>
+  <form id="bookingForm" class="row g-3">
     <input type="hidden" name="room_id" id="room_id">
     <div class="col-md-6">
       <label class="form-label">Имя *</label>
@@ -46,9 +49,7 @@ footer{margin:30px 0 16px;padding:20px}
     </div>
     <div class="col-md-6">
       <label class="form-label">Телефон *</label>
-      <input class="form-control" name="phone" type="tel" autocomplete="tel"
-             placeholder="+7(999)123-45-67 или 8 999 123 45 67" required>
-      <div class="form-text">Допустимо: +7(999)123-45-67, 8 999 123 45 67 или 89991234567.</div>
+      <input class="form-control" name="phone" type="tel" placeholder="+7(999)123-45-67" required>
     </div>
     <div class="col-md-6">
       <label class="form-label">E-mail *</label>
@@ -63,10 +64,16 @@ footer{margin:30px 0 16px;padding:20px}
       <input class="form-control" type="date" name="check_out" id="check_out" required>
     </div>
     <div class="col-12">
-      <button class="btn btn-success btn-lg">Отправить заявку</button>
+      <button type="submit" class="btn btn-success btn-lg">Отправить заявку</button>
     </div>
   </form>
 </main>
+
+<div class="debug-box">
+  <strong>🔍 Отладка:</strong> заявок в хранилище: <span id="debugCount">0</span>
+  <pre id="debugData">[]</pre>
+  <button class="btn btn-sm btn-outline-danger" onclick="if(confirm('Удалить все заявки?')){localStorage.removeItem('hotel_bookings');location.reload();}">Очистить все заявки</button>
+</div>
 
 <footer>Москва, ул. Ивовая, 48 · Пн–Пт, 8:00–17:00 · 8 (800) 555-35-35</footer>
 
@@ -83,47 +90,30 @@ const ROOMS = {
   9:{name:"Семейный 402",category:"Семейный",price:5800}
 };
 
-function fmt(n){ return n.toLocaleString('ru-RU')+' ₽'; }
-function today(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function today(){ return new Date().toISOString().slice(0,10); }
 function tomorrow(){ const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
 
-const params = new URLSearchParams(location.search);
-const roomId = parseInt(params.get('room')||'0',10);
-const room = ROOMS[roomId];
-const err = document.getElementById('errorBlock');
-const success = document.getElementById('successBlock');
-
-if(!room){
-  document.querySelector('main').innerHTML = '<h1 class="h2">Номер не найден.</h1><a href="index.html">Вернуться в каталог</a>';
-} else {
-  document.getElementById('roomInfo').innerHTML =
-    `<strong>${room.name}</strong> · ${room.category} · ${fmt(room.price)}/сутки`;
-  document.getElementById('room_id').value = roomId;
-  document.getElementById('check_in').min = today();
-  document.getElementById('check_out').min = tomorrow();
+function updateDebug(){
+  const data = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
+  document.getElementById('debugCount').textContent = data.length;
+  document.getElementById('debugData').textContent = JSON.stringify(data, null, 2);
 }
 
-const ci = document.getElementById('check_in');
-const co = document.getElementById('check_out');
-ci.addEventListener('change', ()=>{
-  if(ci.value && ci.value < today()){ ci.setCustomValidity('Дата заезда не может быть раньше сегодняшней.'); ci.reportValidity(); ci.value=''; return; }
-  ci.setCustomValidity('');
-  if(ci.value){
-    const [y,m,d] = ci.value.split('-').map(Number);
-    const next = new Date(y,m-1,d); next.setDate(next.getDate()+1);
-    const minOut = next.toISOString().slice(0,10);
-    co.min = minOut;
-    if(co.value && co.value < minOut) co.value='';
-  } else { co.min = today(); }
-});
-co.addEventListener('change', ()=>{
-  co.setCustomValidity(ci.value && co.value <= ci.value ? 'Дата выезда должна быть позже даты заезда.' : '');
-});
+const params = new URLSearchParams(location.search);
+const roomId = parseInt(params.get('room')||'1',10);
+const room = ROOMS[roomId] || ROOMS[1];
 
-document.getElementById('bookingForm').addEventListener('submit', e=>{
+document.getElementById('roomInfo').innerHTML =
+  `<strong>${room.name}</strong> · ${room.category} · ${room.price.toLocaleString('ru-RU')} ₽/сутки`;
+document.getElementById('room_id').value = roomId;
+document.getElementById('check_in').min = today();
+document.getElementById('check_out').min = tomorrow();
+
+updateDebug();
+
+document.getElementById('bookingForm').addEventListener('submit', function(e){
   e.preventDefault();
-  err.classList.add('d-none');
-  const fd = new FormData(e.target);
+  const fd = new FormData(this);
   const first = fd.get('first_name').trim();
   const last  = fd.get('last_name').trim();
   const phone = fd.get('phone').trim();
@@ -131,21 +121,14 @@ document.getElementById('bookingForm').addEventListener('submit', e=>{
   const inD   = fd.get('check_in');
   const outD  = fd.get('check_out');
 
-  const nameRe = /^[\p{Cyrillic}\s.\-]+$/u;
-  const phoneOk = /^\+7\(\d{3}\)\d{3}-\d{2}-\d{2}$/.test(phone)
-               || /^8\d{10}$/.test(phone.replace(/\s+/g,''))
-               || /^8 \d{3} \d{3} \d{2} \d{2}$/.test(phone);
+  if(!first || !last) return alert('Введите имя и фамилию');
+  if(!phone) return alert('Введите телефон');
+  if(!email) return alert('Введите email');
+  if(!inD || inD < today()) return alert('Дата заезда не может быть раньше сегодняшней');
+  if(!outD || outD <= inD) return alert('Дата выезда должна быть позже даты заезда');
 
-  if(!first || !nameRe.test(first)) return showErr('Введите имя кириллицей. Допускаются пробелы, точки и тире.');
-  if(!last  || !nameRe.test(last))  return showErr('Введите фамилию кириллицей. Допускаются пробелы, точки и тире.');
-  if(!phoneOk) return showErr('Введите телефон в одном из форматов: +7(999)123-45-67, 8 999 123 45 67 или 89991234567.');
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showErr('Введите корректный адрес электронной почты.');
-  if(!inD || inD < today()) return showErr('Дата заезда не может быть раньше сегодняшней.');
-  if(!outD || outD <= inD) return showErr('Дата выезда должна быть позже даты заезда.');
-
-  // Сохраняем заявку в localStorage
   const bookings = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
-  const newBooking = {
+  bookings.push({
     id: Date.now(),
     room_id: roomId,
     room: room.name,
@@ -158,15 +141,13 @@ document.getElementById('bookingForm').addEventListener('submit', e=>{
     check_out: outD,
     status: 'pending',
     created_at: new Date().toISOString()
-  };
-  bookings.push(newBooking);
+  });
   localStorage.setItem('hotel_bookings', JSON.stringify(bookings));
 
-  e.target.classList.add('d-none');
-  success.classList.remove('d-none');
+  this.style.display = 'none';
+  document.getElementById('successBlock').classList.remove('d-none');
+  updateDebug();
 });
-
-function showErr(msg){ err.textContent = msg; err.classList.remove('d-none'); }
 </script>
 </body>
 </html>
