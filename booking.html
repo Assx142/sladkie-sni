@@ -87,4 +87,60 @@ const err = document.getElementById('errorBlock');
 const success = document.getElementById('successBlock');
 
 if(!room){
-  document.querySelector('main').i
+  document.querySelector('main').innerHTML = '<h1 class="h2">Номер не найден.</h1><a href="index.html">Вернуться в каталог</a>';
+} else {
+  document.getElementById('roomInfo').innerHTML =
+    `<strong>${room.name}</strong> · ${room.category} · ${fmt(room.price)}/сутки`;
+  document.getElementById('room_id').value = roomId;
+  document.getElementById('check_in').min = today();
+  document.getElementById('check_out').min = tomorrow();
+}
+
+const ci = document.getElementById('check_in');
+const co = document.getElementById('check_out');
+ci.addEventListener('change', ()=>{
+  if(ci.value && ci.value < today()){ ci.setCustomValidity('Дата заезда не может быть раньше сегодняшней.'); ci.reportValidity(); ci.value=''; return; }
+  ci.setCustomValidity('');
+  if(ci.value){
+    const [y,m,d] = ci.value.split('-').map(Number);
+    const next = new Date(y,m-1,d); next.setDate(next.getDate()+1);
+    const minOut = next.toISOString().slice(0,10);
+    co.min = minOut;
+    if(co.value && co.value < minOut) co.value='';
+  } else { co.min = today(); }
+});
+co.addEventListener('change', ()=>{
+  co.setCustomValidity(ci.value && co.value <= ci.value ? 'Дата выезда должна быть позже даты заезда.' : '');
+});
+
+document.getElementById('bookingForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  err.classList.add('d-none');
+  const fd = new FormData(e.target);
+  const first = fd.get('first_name').trim();
+  const last  = fd.get('last_name').trim();
+  const phone = fd.get('phone').trim();
+  const email = fd.get('email').trim();
+  const inD   = fd.get('check_in');
+  const outD  = fd.get('check_out');
+
+  const nameRe = /^[\p{Cyrillic}\s.\-]+$/u;
+  const phoneOk = /^\+7\(\d{3}\)\d{3}-\d{2}-\d{2}$/.test(phone)
+               || /^8\d{10}$/.test(phone.replace(/\s+/g,''))
+               || /^8 \d{3} \d{3} \d{2} \d{2}$/.test(phone);
+
+  if(!first || !nameRe.test(first)) return showErr('Введите имя кириллицей. Допускаются пробелы, точки и тире.');
+  if(!last  || !nameRe.test(last))  return showErr('Введите фамилию кириллицей. Допускаются пробелы, точки и тире.');
+  if(!phoneOk) return showErr('Введите телефон в одном из форматов: +7(999)123-45-67, 8 999 123 45 67 или 89991234567.');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showErr('Введите корректный адрес электронной почты.');
+  if(!inD || inD < today()) return showErr('Дата заезда не может быть раньше сегодняшней.');
+  if(!outD || outD <= inD) return showErr('Дата выезда должна быть позже даты заезда.');
+
+  e.target.classList.add('d-none');
+  success.classList.remove('d-none');
+});
+
+function showErr(msg){ err.textContent = msg; err.classList.remove('d-none'); }
+</script>
+</body>
+</html>
