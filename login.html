@@ -4,11 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Вход администратора</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bootstrap.min.css">
 <link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/index.css">
 </head>
 <body class="container">
+
 <header class="site-header"><a class="brand" href="index.html">Сладкие сны</a></header>
+
 <main class="form-panel my-4" style="max-width:520px;margin:auto!important">
   <h1 class="h3">Вход администратора</h1>
   <div id="error" class="alert alert-danger d-none"></div>
@@ -21,13 +24,14 @@
   </form>
   <p class="muted small mt-3 mb-0">Доступ только для администратора.</p>
 </main>
+
+<script src="js/bootstrap.bundle.min.js"></script>
 <script>
 document.getElementById('loginForm').addEventListener('submit', e=>{
   e.preventDefault();
   const fd = new FormData(e.target);
   const u = fd.get('username'), p = fd.get('password');
   const err = document.getElementById('error');
-  // Демо-проверка (на GitHub Pages нет серверной авторизации)
   if(u === 'hotel123' && p === 'adminHotel'){
     sessionStorage.setItem('admin','1');
     location.href = 'admin.html';
