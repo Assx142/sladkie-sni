@@ -144,7 +144,7 @@ document.getElementById('bookingForm').addEventListener('submit', e=>{
   if(!outD || outD <= inD) return showErr('Дата выезда должна быть позже даты заезда.');
 
   // Сохраняем заявку в localStorage
-  const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+  const bookings = JSON.parse(localStorage.getItem('hotel_bookings') || '[]');
   const newBooking = {
     id: Date.now(),
     room_id: roomId,
@@ -160,7 +160,10 @@ document.getElementById('bookingForm').addEventListener('submit', e=>{
     created_at: new Date().toISOString()
   };
   bookings.push(newBooking);
-  localStorage.setItem('bookings', JSON.stringify(bookings));
+  localStorage.setItem('hotel_bookings', JSON.stringify(bookings));
+
+  console.log('Заявка сохранена:', newBooking);
+  console.log('Все заявки:', bookings);
 
   e.target.classList.add('d-none');
   success.classList.remove('d-none');
