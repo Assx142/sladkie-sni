@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Панель администратора</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bootstrap.min.css">
 <link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/index.css">
 </head>
 <body class="container">
+
 <header class="site-header d-flex justify-content-between align-items-center">
   <a class="brand" href="index.html">Сладкие сны</a>
   <div>
@@ -15,6 +17,7 @@
     <a href="logout.html" class="btn btn-outline-danger btn-sm">Выйти</a>
   </div>
 </header>
+
 <main>
   <h1 class="h2 my-4">Заявки на бронирование</h1>
   <div id="authWarn" class="alert alert-warning d-none">
@@ -30,6 +33,8 @@
     <p id="emptyMsg" class="muted mb-0 d-none">Заявок пока нет.</p>
   </div>
 </main>
+
+<script src="js/bootstrap.bundle.min.js"></script>
 <script>
 const DEMO = [
   {id:1, last:"Иванов", first:"Иван", phone:"+7(999)123-45-67", email:"ivanov@mail.ru",
@@ -59,8 +64,8 @@ if(!sessionStorage.getItem('admin')){
       <td>
         <div class="d-flex flex-wrap gap-1">
           ${b.status==='pending'
-            ? `<button class="btn btn-success btn-sm">Одобрить</button>
-               <button class="btn btn-warning btn-sm">Отклонить</button>`:''}
+            ? `<button class="btn btn-success btn-sm" onclick="alert('На GitHub Pages одобрение недоступно — нужен PHP-хостинг.')">Одобрить</button>
+               <button class="btn btn-warning btn-sm" onclick="alert('На GitHub Pages отклонение недоступно — нужен PHP-хостинг.')">Отклонить</button>`:''}
           <button class="btn btn-danger btn-sm" onclick="if(confirm('Удалить заявку?'))alert('На GitHub Pages удаление недоступно.')">Удалить</button>
         </div>
       </td>
