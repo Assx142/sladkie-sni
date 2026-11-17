@@ -162,9 +162,6 @@ document.getElementById('bookingForm').addEventListener('submit', e=>{
   bookings.push(newBooking);
   localStorage.setItem('hotel_bookings', JSON.stringify(bookings));
 
-  console.log('Заявка сохранена:', newBooking);
-  console.log('Все заявки:', bookings);
-
   e.target.classList.add('d-none');
   success.classList.remove('d-none');
 });
